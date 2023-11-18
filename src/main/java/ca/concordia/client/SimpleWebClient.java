@@ -8,7 +8,7 @@ public class SimpleWebClient {
     public static void main(String[] args)  {
         try {
             // Establish a connection to the server
-            Socket socket = new Socket("localhost", 5000);
+            Socket socket = new Socket("localhost", 5005);
 
             // Create an output stream to send the request
             OutputStream out = socket.getOutputStream();

@@ -1,27 +1,43 @@
 package ca.concordia.server;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.URLDecoder;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-//create the WebServer class to receive connections on port 5000. Each connection is handled by a master thread that puts the descriptor in a bounded buffer. A pool of worker threads take jobs from this buffer if there are any to handle the connection.
 public class WebServer {
 
-    public void start() throws java.io.IOException{
-        //Create a server socket
-        ServerSocket serverSocket = new ServerSocket(5005);
-        while(true){
-            System.out.println("Waiting for a client to connect...");
-            //Accept a connection from a client
-            Socket clientSocket = serverSocket.accept();
-            System.out.println("New client...");
-            BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-            OutputStream out = clientSocket.getOutputStream();
+    private static final int PORT = 5005;
+    private static final int THREAD_POOL_SIZE = 10;
 
+    private final ExecutorService executorService;
+
+    public WebServer() {
+        this.executorService = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
+    }
+
+    public void start() throws IOException {
+        try (ServerSocket serverSocket = new ServerSocket(PORT)) {
+            while (true) {
+                System.out.println("Waiting for a client to connect...");
+                Socket clientSocket = serverSocket.accept();
+                System.out.println("New client...");
+
+                // Use executor service to handle the connection in a separate thread
+                executorService.submit(() -> handleConnection(clientSocket));
+            }
+        }
+    }
+
+    private void handleConnection(Socket clientSocket) {
+        String threadName = Thread.currentThread().getName();
+        System.out.println("Handling connection in thread: " + threadName);
+        try (
+                BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+                OutputStream out = clientSocket.getOutputStream()
+        ) {
             String request = in.readLine();
             if (request != null) {
                 if (request.startsWith("GET")) {
@@ -32,14 +48,18 @@ public class WebServer {
                     handlePostRequest(in, out);
                 }
             }
-
-            in.close();
-            out.close();
-            clientSocket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                clientSocket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
-    private static void handleGetRequest(OutputStream out) throws IOException {
+    private void handleGetRequest(OutputStream out) throws IOException {
         // Respond with a basic HTML page
         System.out.println("Handling GET request");
         String response = "HTTP/1.1 200 OK\r\n\r\n" +
@@ -74,7 +94,7 @@ public class WebServer {
         out.flush();
     }
 
-    private static void handlePostRequest(BufferedReader in, OutputStream out) throws IOException {
+    private void handlePostRequest(BufferedReader in, OutputStream out) throws IOException {
         System.out.println("Handling post request");
         StringBuilder requestBody = new StringBuilder();
         int contentLength = 0;
@@ -140,7 +160,6 @@ public class WebServer {
     }
 
     public static void main(String[] args) {
-        //Start the server, if an exception occurs, print the stack trace
         WebServer server = new WebServer();
         try {
             server.start();
@@ -149,4 +168,3 @@ public class WebServer {
         }
     }
 }
-
