@@ -4,6 +4,10 @@ import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.URLDecoder;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -159,7 +163,54 @@ public class WebServer {
         out.flush();
     }
 
+
+    public static Map<Integer, Account> readFile(String filePath) {
+        Map<Integer, Account> accountMap = new HashMap<>();
+
+        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
+            String line;
+            boolean firstLine = true;
+
+            while ((line = br.readLine()) != null) {
+                if (firstLine) {
+                    // Skip the first line (header)
+                    firstLine = false;
+                    continue;
+                }
+
+                // Split the line into account ID and balance
+                String[] parts = line.split(",");
+                int accountId = Integer.parseInt(parts[0].trim());
+                int balance = Integer.parseInt(parts[1].trim());
+
+                // Create an Account object and put it into the HashMap
+                Account account = new Account(balance, accountId);
+                accountMap.put(accountId, account);
+            }
+        } catch (IOException | NumberFormatException e) {
+            e.printStackTrace(); // Handle exceptions appropriately
+        }
+
+        return accountMap;
+    }
+
+
+
+
     public static void main(String[] args) {
+
+        //Setup data structure using file input
+        String filePath = "src/main/resources/data.txt";
+        Map<Integer, Account> accountMap = readFile(filePath);
+
+        for (Map.Entry<Integer, Account> entry : accountMap.entrySet()) {
+            int accountId = entry.getKey();
+            Account account = entry.getValue();
+            int balance = account.getBalance();
+
+            System.out.println("Account ID: " + accountId + ", Balance: " + balance);
+        }
+
         WebServer server = new WebServer();
         try {
             server.start();
@@ -167,4 +218,12 @@ public class WebServer {
             e.printStackTrace();
         }
     }
+
+
+
+
+
+
+
+
 }
