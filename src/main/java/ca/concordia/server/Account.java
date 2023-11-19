@@ -19,7 +19,12 @@ public class Account {
     }
 
     public void withdraw(int amount){
-        balance -= amount;
+        lock.lock();
+        try {
+            balance -= amount;
+        } finally {
+            lock.unlock();
+        }
     }
 
     public void deposit(int amount){

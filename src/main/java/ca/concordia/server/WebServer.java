@@ -22,6 +22,8 @@ public class WebServer {
         this.executorService = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
     }
 
+    private static Map<Integer, Account> accountMap = new HashMap<>();
+
     public void start() throws IOException {
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
             while (true) {
@@ -87,9 +89,6 @@ public class WebServer {
                 "        <label for=\"toAccount\">To Account:</label>\n" +
                 "        <input type=\"text\" id=\"toAccount\" name=\"toAccount\"><br><br>\n" +
                 "\n" +
-                "        <label for=\"toValue\">To Value:</label>\n" +
-                "        <input type=\"text\" id=\"toValue\" name=\"toValue\"><br><br>\n" +
-                "\n" +
                 "        <input type=\"submit\" value=\"Submit\">\n" +
                 "    </form>\n" +
                 "</body>\n" +
@@ -137,21 +136,53 @@ public class WebServer {
                     case "toAccount":
                         toAccount = val;
                         break;
-                    case "toValue":
-                        toValue = val;
-                        break;
                 }
             }
         }
 
+        String responseContent = "<html><body><h1>Thank you for using Concordia Transfers</h1>";
+        // Check if both accounts exist
+        if ((account != null) & (toAccount != null) & (value != null)) {
+            boolean sourceAccountExists = doesAccountExist(Integer.parseInt(account));
+            boolean targetAccountExists = doesAccountExist(Integer.parseInt(toAccount));
+            if (!sourceAccountExists) {
+                responseContent = responseContent + "<html><body><h2>Source Account does not exist</h2>";
+            } else if (!targetAccountExists) {
+                responseContent = responseContent + "<html><body><h2>Destination Account does not exist</h2>";
+            }
+            else {
+                Account source = accountMap.get(Integer.parseInt(account));
+                Account destination = accountMap.get(Integer.parseInt(toAccount));
+                if (Integer.parseInt(value) <= source.getBalance()){
+                    source.withdraw(Integer.parseInt(value));
+                    destination.deposit(Integer.parseInt(value));
+
+
+
+                    responseContent = responseContent +
+                            "<h2>Received Form Inputs:</h2>"+
+                            "<p>Source Account: " + account + "</p>" +
+                            "<p>Value: " + value + "</p>" +
+                            "<p>Destination Account: " + toAccount + "</p>" +
+                            "<p>Source Account New Balance: " + source.getBalance() + "</p>" +
+                            "<p>Destination Account New Balance: " + destination.getBalance() + "</p>" +
+                            "</body></html>";
+
+                }
+                else {
+                    responseContent = responseContent + "<html><body><h2>No sufficient funds in Source Account</h2>";
+                }
+            }
+        }
+
+
         // Create the response
-        String responseContent = "<html><body><h1>Thank you for using Concordia Transfers</h1>" +
+        /*responseContent = "<html><body><h1>Thank you for using Concordia Transfers</h1>" +
                 "<h2>Received Form Inputs:</h2>"+
                 "<p>Account: " + account + "</p>" +
                 "<p>Value: " + value + "</p>" +
                 "<p>To Account: " + toAccount + "</p>" +
-                "<p>To Value: " + toValue + "</p>" +
-                "</body></html>";
+                "</body></html>";*/
 
         // Respond with the received form inputs
         String response = "HTTP/1.1 200 OK\r\n" +
@@ -194,14 +225,16 @@ public class WebServer {
         return accountMap;
     }
 
-
-
+    //check if account exists
+    public boolean doesAccountExist(int accountId) {
+        return accountMap.containsKey(accountId);
+    }
 
     public static void main(String[] args) {
 
         //Setup data structure using file input
         String filePath = "src/main/resources/data.txt";
-        Map<Integer, Account> accountMap = readFile(filePath);
+        accountMap = readFile(filePath);
 
         for (Map.Entry<Integer, Account> entry : accountMap.entrySet()) {
             int accountId = entry.getKey();
@@ -218,12 +251,4 @@ public class WebServer {
             e.printStackTrace();
         }
     }
-
-
-
-
-
-
-
-
 }
