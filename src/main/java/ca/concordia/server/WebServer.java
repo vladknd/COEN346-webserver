@@ -153,7 +153,10 @@ public class WebServer {
             else {
                 Account source = accountMap.get(Integer.parseInt(account));
                 Account destination = accountMap.get(Integer.parseInt(toAccount));
-                if (Integer.parseInt(value) <= source.getBalance()){
+                if (Integer.parseInt(value) < 0) {
+                    responseContent = responseContent + "<html><body><h2>Cannot transfer negative sum</h2>";
+                }
+                else if (Integer.parseInt(value) <= source.getBalance() ){
                     source.withdraw(Integer.parseInt(value));
                     destination.deposit(Integer.parseInt(value));
 
@@ -168,8 +171,7 @@ public class WebServer {
                             "<p>Destination Account New Balance: " + destination.getBalance() + "</p>" +
                             "</body></html>";
 
-                }
-                else {
+                } else {
                     responseContent = responseContent + "<html><body><h2>No sufficient funds in Source Account</h2>";
                 }
             }
