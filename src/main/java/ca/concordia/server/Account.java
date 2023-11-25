@@ -19,20 +19,10 @@ public class Account {
     }
 
     public void withdraw(int amount){
-        lock.lock();
-        try {
             balance -= amount;
-        } finally {
-            lock.unlock();
-        }
     }
 
     public void deposit(int amount){
-        lock.lock();
-        try {
             this.balance += amount;
-        } finally {
-            lock.unlock();
-        }
     }
 }

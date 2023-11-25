@@ -10,11 +10,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class WebServer {
 
     private static final int PORT = 5005;
-    private static final int THREAD_POOL_SIZE = 10;
+    private static final int THREAD_POOL_SIZE = 1000;
+    private final Lock lock = new ReentrantLock();
 
     private final ExecutorService executorService;
 
@@ -147,20 +150,29 @@ public class WebServer {
             boolean targetAccountExists = doesAccountExist(Integer.parseInt(toAccount));
             if (!sourceAccountExists) {
                 responseContent = responseContent + "<html><body><h2>Source Account does not exist</h2>";
+                System.out.println("Account does not exist");
             } else if (!targetAccountExists) {
                 responseContent = responseContent + "<html><body><h2>Destination Account does not exist</h2>";
+                System.out.println("Destination Account does not exist");
             }
             else {
                 Account source = accountMap.get(Integer.parseInt(account));
                 Account destination = accountMap.get(Integer.parseInt(toAccount));
                 if (Integer.parseInt(value) < 0) {
                     responseContent = responseContent + "<html><body><h2>Cannot transfer negative sum</h2>";
+                    System.out.println("Cannot transfer negative sum");
                 }
-                else if (Integer.parseInt(value) <= source.getBalance() ){
-                    source.withdraw(Integer.parseInt(value));
-                    destination.deposit(Integer.parseInt(value));
-
-
+                else if (Integer.parseInt(value) > source.getBalance() ){
+                    responseContent = responseContent + "<html><body><h2>No sufficient funds in Source Account</h2>";
+                } else {
+                    lock.lock();
+                    try {
+                        source.withdraw(Integer.parseInt(value));
+                        destination.deposit(Integer.parseInt(value));
+                        printMap();
+                    } finally {
+                        lock.unlock();
+                    }
 
                     responseContent = responseContent +
                             "<h2>Received Form Inputs:</h2>"+
@@ -170,9 +182,6 @@ public class WebServer {
                             "<p>Source Account New Balance: " + source.getBalance() + "</p>" +
                             "<p>Destination Account New Balance: " + destination.getBalance() + "</p>" +
                             "</body></html>";
-
-                } else {
-                    responseContent = responseContent + "<html><body><h2>No sufficient funds in Source Account</h2>";
                 }
             }
         }
@@ -232,12 +241,7 @@ public class WebServer {
         return accountMap.containsKey(accountId);
     }
 
-    public static void main(String[] args) {
-
-        //Setup data structure using file input
-        String filePath = "src/main/resources/data.txt";
-        accountMap = readFile(filePath);
-
+    public static void printMap() {
         for (Map.Entry<Integer, Account> entry : accountMap.entrySet()) {
             int accountId = entry.getKey();
             Account account = entry.getValue();
@@ -245,6 +249,15 @@ public class WebServer {
 
             System.out.println("Account ID: " + accountId + ", Balance: " + balance);
         }
+    }
+
+    public static void main(String[] args) {
+
+        //Setup data structure using file input
+        String filePath = "src/main/resources/data.txt";
+        accountMap = readFile(filePath);
+
+        printMap();
 
         WebServer server = new WebServer();
         try {
@@ -253,4 +266,8 @@ public class WebServer {
             e.printStackTrace();
         }
     }
+
+
+
+
 }

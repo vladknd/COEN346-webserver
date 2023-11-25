@@ -5,11 +5,12 @@ import java.net.*;
 
 public class MultithreadedClient implements Runnable {
 
-    private static final String POST_DATA = "account=1234&value=1000&toAccount=5678&toValue=500";
+    private static final String POST_DATA = "account=123&value=1&toAccount=321";
 
     @Override
     public void run() {
         try {
+
             // Establish a connection to the server
             Socket socket = new Socket("localhost", 5005);
 
@@ -53,6 +54,11 @@ public class MultithreadedClient implements Runnable {
 
         for (int i = 0; i < numThreads; i++) {
             Thread thread = new Thread(new MultithreadedClient());
+            try {
+                Thread.sleep(1);  // 1 second delay
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
             thread.start();
         }
     }
