@@ -52,19 +52,21 @@ public class MultithreadedClient implements Runnable {
                 // Send the POST request
                 writer.println("POST /submit HTTP/1.1");
                 writer.println("Host: localhost:8080");
+                writer.println("Content-Type: application/x-www-form-urlencoded");
 
                 //-----------------Following lines should be commented if we uncomment TEST
-                writer.println("Content-Type: application/x-www-form-urlencoded");
                 writer.println("Content-Length: " + POST_DATA.length());
+                writer.println();
+                writer.println(POST_DATA);
 
                 //---------------------TEST-------------------------------------
                 //writer.println("Content-Length: " + POST_DATA_ARRAY[0].length());
                 //Random random = new Random();
+                //writer.println();
                 // writer.println(POST_DATA_ARRAY[random.nextInt(POST_DATA_ARRAY.length)]);
 
 
-                writer.println();
-                writer.println(POST_DATA);
+
                 writer.flush();
 
                 // Read and print the response
