@@ -165,14 +165,9 @@ public class WebServer {
                 else if (Integer.parseInt(value) > source.getBalance() ){
                     responseContent = responseContent + "<html><body><h2>No sufficient funds in Source Account</h2>";
                 } else {
-                    lock.lock();
-                    try {
-                        source.withdraw(Integer.parseInt(value));
-                        destination.deposit(Integer.parseInt(value));
-                        printMap();
-                    } finally {
-                        lock.unlock();
-                    }
+                    source.withdraw(Integer.parseInt(value));
+                    destination.deposit(Integer.parseInt(value));
+                    printMap();
 
                     responseContent = responseContent +
                             "<h2>Received Form Inputs:</h2>"+
@@ -265,6 +260,7 @@ public class WebServer {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
     }
 
 
