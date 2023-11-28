@@ -165,8 +165,10 @@ public class WebServer {
                 else if (Integer.parseInt(value) > source.getBalance() ){
                     responseContent = responseContent + "<html><body><h2>No sufficient funds in Source Account</h2>";
                 } else {
-                    source.withdraw(Integer.parseInt(value));
-                    destination.deposit(Integer.parseInt(value));
+
+                    source.transferFunds(destination,Integer.parseInt(value));
+
+                    System.out.println("Updated Accounts balance:");
                     printMap();
 
                     responseContent = responseContent +
@@ -253,6 +255,7 @@ public class WebServer {
         accountMap = readFile(filePath);
 
         printMap();
+        System.out.println("Accounts initialized");
 
         WebServer server = new WebServer();
         try {
