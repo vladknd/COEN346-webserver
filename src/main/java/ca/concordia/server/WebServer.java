@@ -156,6 +156,7 @@ public class WebServer {
                 System.out.println("Destination Account does not exist");
             }
             else {
+                //Source and Destination Accounts exists -> check if balance transfer is valid
                 Account source = accountMap.get(Integer.parseInt(account));
                 Account destination = accountMap.get(Integer.parseInt(toAccount));
                 if (Integer.parseInt(value) < 0) {
