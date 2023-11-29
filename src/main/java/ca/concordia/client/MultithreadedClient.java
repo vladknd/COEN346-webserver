@@ -17,6 +17,7 @@ public class MultithreadedClient implements Runnable {
     private Lock lck = new ReentrantLock();
     private static int n = 0;
 
+
     //private static final String POST_DATA = "account=123&value=1&toAccount=321"; //comment if TEST uncommented
 
     //---------------------------TEST-----------------
@@ -43,7 +44,6 @@ public class MultithreadedClient implements Runnable {
 
             // Your thread's logic goes here
             System.out.println("Thread started executing...");
-            lck.lock();
             try (Socket socket = new Socket("localhost", 5005);
                  OutputStream out = socket.getOutputStream();
                  PrintWriter writer = new PrintWriter(new OutputStreamWriter(out));
@@ -64,10 +64,11 @@ public class MultithreadedClient implements Runnable {
                 //Random random = new Random();
                 writer.println();
                 System.out.println(POST_DATA_ARRAY[n]);
+                lck.lock();
                 writer.println(POST_DATA_ARRAY[n]);
                 n=1-n;
                 System.out.println(n);
-
+                lck.unlock();
 
 
 
@@ -82,7 +83,6 @@ public class MultithreadedClient implements Runnable {
             } finally {
                 // Release the permit in a finally block to ensure it's released even if an exception occurs
                 connectionSemaphore.release();
-                lck.unlock();
             }
 
         } catch (IOException | InterruptedException e) {
@@ -107,5 +107,9 @@ public class MultithreadedClient implements Runnable {
 
         // Shutdown the thread pool when it's no longer needed
         executorService.shutdown();
+
+        System.out.println("Finished execution!");
     }
+
+
 }

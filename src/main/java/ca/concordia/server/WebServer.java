@@ -18,6 +18,7 @@ public class WebServer {
     private static final int PORT = 5005;
     private static final int THREAD_POOL_SIZE = 1000;
     private final Lock lock = new ReentrantLock();
+    static int count = 0;
 
     private final ExecutorService executorService;
 
@@ -167,10 +168,15 @@ public class WebServer {
                     responseContent = responseContent + "<html><body><h2>No sufficient funds in Source Account</h2>";
                 } else {
 
-                    source.transferFunds(destination,Integer.parseInt(value));
+                    source.transferFunds(destination, Integer.parseInt(value));
+                    //destination.deposit(Integer.parseInt(value));
 
                     System.out.println("Updated Accounts balance:");
                     printMap();
+
+                    System.out.println(count);
+                    count ++;
+
 
                     responseContent = responseContent +
                             "<h2>Received Form Inputs:</h2>"+
